@@ -1,7 +1,6 @@
 <?php
 
 namespace App\Services;
-
 use App\Models\Customer; 
 use Illuminate\Support\Facades\Http;
 
@@ -11,20 +10,21 @@ class RandomUserImporter implements ImporterInterface
 
     public function __construct()
     {
-        $this->apiUrl = config('services.randomuser.url');
+        $this->apiUrl = config('services.randomuser.url', 'https://randomuser.me/api/');
     }
 
     public function importCustomers()
-    {
-        $response = Http::get($this->apiUrl, [
-            'results' => 100,
-            'nat' => 'AU',
-        ]);
+{
+    $response = Http::get($this->apiUrl, [
+        'results' => 100,
+        'nat' => 'AU',
+    ]);
 
-        $customers = $response->json()['results'];
+    $customers = $response->json()['results'];
 
-        foreach ($customers as $customerData) {
-            Customer::updateOrCreate(
+    foreach ($customers as $customerData) {
+        try {
+            $customer = Customer::updateOrCreate(
                 ['email' => $customerData['email']],
                 [
                     'first_name' => $customerData['name']['first'],
@@ -37,6 +37,13 @@ class RandomUserImporter implements ImporterInterface
                     'password' => md5($customerData['login']['password']),
                 ]
             );
+
+
+          
+        } catch (\Exception $e) {
+           
         }
     }
+}
+
 }
